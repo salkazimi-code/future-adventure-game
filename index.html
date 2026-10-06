@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Future Adventure - Board Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+    }
+
+    /* Screen Wrappers */
+    .screen {
+      width: 100%;
+      max-width: 1200px;
+      min-height: 100vh;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Start Screen */
+    .start-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 550px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+      border: 4px solid #f39c12;
+    }
+
+    .start-card h1 {
+      font-size: 2.5rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .start-card p {
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #34495e;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #bdc3c7;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .input-group input:focus {
+      border-color: #3498db;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: white;
+      border: none;
+      padding: 16px 36px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #1e8449;
+      transition: all 0.1s ease;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-primary:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #1e8449;
+    }
+
+    /* Top Navigation Header */
+    header {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-control {
+      background: #34495e;
+      color: white;
+      border: 2px solid #5d6d7e;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .btn-control:hover {
+      background: #4a6572;
+    }
+
+    /* Current Turn Banner */
+    .turn-banner {
+      width: 100%;
+      background: #f1c40f;
+      color: #2c3e50;
+      text-align: center;
+      padding: 14px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .turn-indicator-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
+    /* Game Board Grid Container */
+    .board-container {
+      width: 100%;
+      margin: 20px 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      position: relative;
+    }
+
+    .tile {
+      background: white;
+      border-radius: 14px;
+      min-height: 110px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      border: 3px solid #ddd;
+      transition: transform 0.2s;
+    }
+
+    .tile-number {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      background: rgba(255,255,255,0.8);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .tile-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-top: 22px;
+      text-align: center;
+    }
+
+    .tile-icon {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    /* Tile Types Styling */
+    .tile.start { background: #2ecc71; color: white; border-color: #27ae60; }
+    .tile.finish { background: #f1c40f; color: #2c3e50; border-color: #f39c12; }
+    .tile.challenge { background: #ffeaa7; border-color: #fdcb6e; }
+    .tile.mystery { background: #a29bfe; color: white; border-color: #6c5ce7; }
+    .tile.choose { background: #74b9ff; color: white; border-color: #0984e3; }
+    .tile.team-mission { background: #55efc4; border-color: #00b894; }
+    .tile.spot-error { background: #ff7675; color: white; border-color: #d63031; }
+    .tile.shortcut { background: #81ecec; border-color: #00cec9; }
+    .tile.oops { background: #b2bec3; border-color: #636e72; }
+    .tile.comeback { background: #fd79a8; color: white; border-color: #e84393; }
+
+    .tile.highlighted {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #f1c40f;
+      border-color: #f1c40f;
+      z-index: 5;
+    }
+
+    /* Pawns Container inside Tile */
+    .pawns-holder {
+      display: flex;
+      gap: 6px;
+      min-height: 28px;
+      align-items: center;
+    }
+
+    .pawn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      transition: all 0.4s ease;
+    }
+
+    .pawn.team1 { background: #e74c3c; }
+    .pawn.team2 { background: #00cec9; }
+
+    /* Control Panel Bottom */
+    .controls-panel {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 16px 30px;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      width: 100%;
+    }
+
+    /* Dice Box */
+    .dice-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .dice {
+      width: 60px;
+      height: 60px;
+      background: white;
+      border: 3px solid #2c3e50;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 5px 0 #2c3e50;
+      color: #2c3e50;
+    }
+
+    .dice.rolling {
+      animation: roll 0.4s infinite linear;
+    }
+
+    @keyframes roll {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-action {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #d35400;
+    }
+
+    .btn-action:disabled {
+      background: #bdc3c7;
+      box-shadow: 0 5px 0 #7f8c8d;
+      cursor: not-allowed;
+    }
+
+    .btn-action:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #d35400;
+    }
+
+    /* Modals & Dialogs */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      position: relative;
+      animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #ecf0f1;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #34495e;
+      margin-bottom: 25px;
+    }
+
+    .modal-body img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 12px;
+      margin: 10px 0;
+      display: block;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-option {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      padding: 12px 18px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-option:hover {
+      background: #e2e6ea;
+      border-color: #dae0e5;
+    }
+
+    .teacher-controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .btn-success { background: #2ecc71; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
+    .btn-fail { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
+
+    /* Round Summary Modal */
+    .round-summary-card {
+      text-align: center;
+    }
+
+    .stats-table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+    }
+
+    .stats-table th, .stats-table td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+
+    .stats-table th { background: #f4f6f7; }
+
+    /* Certificate Styling */
+    .certificate-container {
+      background: #fff;
+      border: 10px solid #f1c40f;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .certificate-title {
+      font-size: 2.2rem;
+      color: #d35400;
+      font-family: 'Georgia', serif;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .certificate-subtitle { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 20px; }
+    .winner-name-display { font-size: 2rem; color: #2c3e50; font-weight: bold; border-bottom: 2px solid #2c3e50; display: inline-block; padding: 5px 30px; margin: 15px 0; }
+
+    @media print {
+      body * { visibility: hidden; }
+      .printable-certificate, .printable-certificate * { visibility: visible; }
+      .printable-certificate { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. START SCREEN -->
+  <div id="start-screen" class="screen active">
+    <div class="start-card">
+      <h1>The Future Adventure</h1>
+      <p>Interactive Board Game: Will vs. Going to</p>
+      
+      <div class="input-group">
+        <label for="team1-input">Team 1 Name (Red)</label>
+        <input type="text" id="team1-input" value="Future Explorers">
+      </div>
+
+      <div class="input-group">
+        <label for="team2-input">Team 2 Name (Cyan)</label>
+        <input type="text" id="team2-input" value="Time Navigators">
+      </div>
+
+      <button class="btn-primary" onclick="startGame()">START GAME</button>
+    </div>
+  </div>
+
+  <!-- 2. GAME SCREEN -->
+  <div id="game-screen" class="screen">
+    <header>
+      <div style="font-weight: bold; font-size: 1.2rem;">The Future Adventure</div>
+      <div class="header-controls">
+        <button class="btn-control" onclick="toggleFullScreen()">Full Screen</button>
+        <button class="btn-control" onclick="toggleSound()" id="sound-btn">Sound ON</button>
+        <button class="btn-control" onclick="resetGame()">Reset Game</button>
+      </div>
+    </header>
+
+    <div class="turn-banner" id="turn-banner">
+      <span class="turn-indicator-dot" id="turn-dot"></span>
+      <span id="turn-text">Now Playing: Team 1</span>
+    </div>
+
+    <div class="board-container">
+      <div class="board-grid" id="board-grid">
+        <!-- Board Tiles (25 total tiles: 0 Start, 1-23 Path, 24 Finish) -->
+      </div>
+    </div>
+
+    <div class="controls-panel">
+      <div class="dice-container">
+        <div class="dice" id="dice-display">🎲</div>
+        <button class="btn-action" id="roll-btn" onclick="rollDice()">ROLL DICE</button>
+      </div>
+      <div style="font-size: 1.1rem; font-weight: bold; color: #2c3e50;" id="game-status-info">
+        Round 1 / 3
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CHALLENGE MODAL -->
+  <div class="modal-overlay" id="challenge-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="modal-tile-title">Challenge Title</span>
+        <span id="modal-badge" style="font-size: 0.8rem; background: #3498db; color: white; padding: 4px 8px; border-radius: 6px;">Question</span>
+      </div>
+      <div class="modal-body" id="modal-body-content">
+        <!-- Dynamic Challenge Content -->
+      </div>
+      <div id="modal-footer-controls">
+        <!-- Dynamic Option Buttons or Teacher Override Buttons -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ROUND SUMMARY MODAL -->
+  <div class="modal-overlay" id="round-modal">
+    <div class="modal-box round-summary-card">
+      <h2 id="round-summary-title" style="color: #2c3e50; margin-bottom: 10px;">Round Completed!</h2>
+      <p style="color: #7f8c8d;">Here is the performance summary for this round:</p>
+
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Team</th>
+            <th>Current Tile</th>
+            <th>Successful Missions</th>
+          </tr>
+        </thead>
+        <tbody id="round-stats-body">
+          <!-- JS Injected -->
+        </tbody>
+      </table>
+
+      <button class="btn-primary" onclick="closeRoundSummary()">CONTINUE TO NEXT ROUND</button>
+    </div>
+  </div>
+
+  <!-- 5. FINAL WINNER & CERTIFICATE MODAL -->
+  <div class="modal-overlay" id="winner-modal">
+    <div class="modal-box printable-certificate" style="max-width: 700px;">
+      <div class="certificate-container">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+        <div class="certificate-title">Certificate of Victory</div>
+        <div class="certificate-subtitle">This certificate is proudly awarded to</div>
+        
+        <div class="winner-name-display" id="winner-team-name">Team Name</div>
+        
+        <p style="font-size: 1.1rem; color: #34495e; margin: 15px 0;">
+          For outstanding performance, teamwork, and mastery of future tenses in<br>
+          <strong>"The Future Adventure"</strong> board game!
+        </p>
+
+        <div style="margin-top: 30px; display: flex; justify-content: space-around; font-size: 0.9rem; color: #7f8c8d;">
+          <div>Date: <span id="cert-date"></span></div>
+          <div>Status: Champion</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center;">
+        <button class="btn-action" onclick="window.print()">PRINT CERTIFICATE</button>
+        <button class="btn-primary" style="width: auto;" onclick="resetGame()">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       AUDIO SYNTHESIZER (Web Audio API - No External Assets Needed)
+       ========================================================================== */
+    let soundEnabled = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'roll') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'success') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'fail') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'move') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-btn').innerText = soundEnabled ? 'Sound ON' : 'Sound OFF';
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    /* ==========================================================================
+       GAME STATE & BOARD LAYOUT
+       ========================================================================== */
+    const boardTiles = [
+      { id: 0, title: "START", type: "start", icon: "🚀" },
+      { id: 1, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 2, title: "Mystery", type: "mystery", icon: "❓" },
+      { id: 3, title: "Choose", type: "choose", icon: "🔀" },
+      { id: 4, title: "Team Mission", type: "team-mission", icon: "👥" },
+      { id: 5, title: "Spot Error", type: "spot-error", icon: "🔍" },
+      { id: 6, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 7, title: "Shortcut", type: "shortcut", icon: "🌉" },
+      { id: 8, title: "Mystery", type: "mystery", icon: "❓" },
+      { id: 9, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 10, title: "Spot Error", type: "spot-error", icon: "🔍" },
+      { id: 11, title: "Choose", type: "choose", icon: "🔀" },
+      { id: 12, title: "Mystery", type: "mystery", icon: "❓" },
+      { id: 13, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 14, title: "Team Mission", type: "team-mission", icon: "👥" },
+      { id: 15, title: "Oops!", type: "oops", icon: "💥" },
+      { id: 16, title: "Shortcut", type: "shortcut", icon: "🌉" },
+      { id: 17, title: "Comeback", type: "comeback", icon: "⭐" },
+      { id: 18, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 19, title: "Mystery", type: "mystery", icon: "❓" },
+      { id: 20, title: "Team Mission", type: "team-mission", icon: "👥" },
+      { id: 21, title: "Choose", type: "choose", icon: "🔀" },
+      { id: 22, title: "Spot Error", type: "spot-error", icon: "🔍" },
+      { id: 23, title: "Challenge", type: "challenge", icon: "✏️" },
+      { id: 24, title: "FINISH", type: "finish", icon: "🏆" }
+    ];
+
+    /* 18 Specific Pedagogical Challenges mapped from Lesson */
+    const challengeBank = [
+      // ROUND 1 (6 Items - Easy Level)
+      {
+        round: 1,
+        type: "mcq",
+        title: "Fill in the Blank",
+        prompt: "A story prompt: 'Look at those dark clouds in the sky! It _____ rain soon.'",
+        options: ["will", "is going to", "won't"],
+        correct: 1,
+        explanation: "Use 'be going to' when there is clear evidence in the present (dark clouds)."
+      },
+      {
+        round: 1,
+        type: "spot-error",
+        title: "Spot the Mistake",
+        prompt: "Find and fix the error: 'She going to visit her grandmother tomorrow.'",
+        options: ["She is going to visit...", "She will visiting...", "She go to visit..."],
+        correct: 0,
+        explanation: "Always include the form of 'be' (is/are/am) before 'going to'."
+      },
+      {
+        round: 1,
+        type: "picture",
+        title: "Unplanned Decision",
+        prompt: "Scenario: The phone rings unexpectedly! Choose the correct spontaneous decision:",
+        options: ["I am going to answer it.", "I will answer it.", "I am answering it."],
+        correct: 1,
+        explanation: "Use 'will' for instant decisions made at the moment of speaking."
+      },
+      {
+        round: 1,
+        type: "rearrange",
+        title: "Sentence Order",
+        prompt: "Rearrange the words to make a correct sentence: [to / are / we / a / watch / movie / going]",
+        options: ["We are going to watch a movie.", "We going to are watch a movie.", "A movie we are going to watch."],
+        correct: 0,
+        explanation: "Correct order: Subject + be + going to + verb + object."
+      },
+      {
+        round: 1,
+        type: "team-mission",
+        title: "Team Challenge: Planned vs. Unplanned",
+        prompt: "Your team arrives at a crossroads! Give one sentence using 'going to' for a planned vacation, and one sentence using 'will' for an offer to help carrying bags.",
+        isTeacherEvaluated: true
+      },
+      {
+        round: 1,
+        type: "mcq",
+        title: "Instant Decision",
+        prompt: "Your friend says: 'I am so thirsty!' You respond: 'Wait, I _____ get you a glass of water.'",
+        options: ["will", "am going to", "going to"],
+        correct: 0,
+        explanation: "Offers of help made on the spot require 'will'."
+      },
+
+      // ROUND 2 (6 Items - Medium Level)
+      {
+        round: 2,
+        type: "spot-error",
+        title: "Spot the Mistake",
+        prompt: "Correct the sentence: 'They will going to play soccer after school.'",
+        options: ["They are going to play soccer...", "They will play soccer going...", "They going to play..."],
+        correct: 0,
+        explanation: "Do not combine 'will' and 'going to' together!"
+      },
+      {
+        round: 2,
+        type: "picture",
+        title: "Planned Action",
+        prompt: "Scenario: You bought tickets last week for a concert tonight. What do you say?",
+        options: ["I will attend a concert tonight.", "I am going to attend a concert tonight.", "I won't attend."],
+        correct: 1,
+        explanation: "Prior plans and arrangements take 'be going to'."
+      },
+      {
+        round: 2,
+        type: "rearrange",
+        title: "Negative Future",
+        prompt: "Rearrange the words: [not / rain / it / tomorrow / will]",
+        options: ["It will not rain tomorrow.", "It not will rain tomorrow.", "Tomorrow rain it will not."],
+        correct: 0,
+        explanation: "'will not' (or won't) comes right before the base verb."
+      },
+      {
+        round: 2,
+        type: "team-mission",
+        title: "Act or Explain!",
+        prompt: "One teammate acts out a planned activity (e.g., packing a bag to go camping). The team must say a sentence using 'going to'.",
+        isTeacherEvaluated: true
+      },
+      {
+        round: 2,
+        type: "mcq",
+        title: "Future Promise",
+        prompt: "Choose the best option: 'I promise I _____ forget your birthday!'",
+        options: ["won't", "am not going to", "not will"],
+        correct: 0,
+        explanation: "Promises are typically expressed with 'will' or 'won't'."
+      },
+      {
+        round: 2,
+        type: "spot-error",
+        title: "Spot the Mistake",
+        prompt: "Find the error: 'Look out! That vase will fall!' (It's already tipping over)",
+        options: ["Look out! That vase is going to fall!", "Look out! That vase falls!", "No error"],
+        correct: 0,
+        explanation: "Predictions based on immediate physical evidence require 'be going to'."
+      },
+
+      // ROUND 3 (6 Items - Advanced Level)
+      {
+        round: 3,
+        type: "team-mission",
+        title: "Strategic Decision",
+        prompt: "Scenario: You are organizing a school trip. Present 3 things your team is going to do using 'be going to'.",
+        isTeacherEvaluated: true
+      },
+      {
+        round: 3,
+        type: "rearrange",
+        title: "Future Question",
+        prompt: "Rearrange into a question: [you / are / what / do / to / going / ?]",
+        options: ["What are you going to do?", "What you are going to do?", "Are you what going to do?"],
+        correct: 0,
+        explanation: "Question format: Question word + be + subject + going to + verb."
+      },
+      {
+        round: 3,
+        type: "mcq",
+        title: "Prediction without Evidence",
+        prompt: "Select the best fit: 'In the year 2050, people _____ live on Mars.'",
+        options: ["will", "are going to", "going to"],
+        correct: 0,
+        explanation: "General opinions/predictions about the distant future without present evidence use 'will'."
+      },
+      {
+        round: 3,
+        type: "spot-error",
+        title: "Spot the Mistake",
+        prompt: "Correct this sentence: 'We are going visit the zoo tomorrow.'",
+        options: ["We are going to visit the zoo...", "We will going visit...", "We going to visit..."],
+        correct: 0,
+        explanation: "Never omit 'to' after 'going' in 'be going to'."
+      },
+      {
+        round: 3,
+        type: "picture",
+        title: "Draw & Guess Challenge",
+        prompt: "Draw a quick sketch on the board of a future prediction. Your team must state it correctly using 'will' or 'going to'.",
+        isTeacherEvaluated: true
+      },
+      {
+        round: 3,
+        type: "team-mission",
+        title: "Final Grand Challenge",
+        prompt: "Differentiate both: Create one unplanned decision response to 'It is cold here' and one planned response to 'Why are you holding a bucket of water?'",
+        isTeacherEvaluated: true
+      }
+    ];
+
+    let gameState = {
+      teams: [
+        { name: "Team 1", color: "#e74c3c", tile: 0, successes: 0 },
+        { name: "Team 2", color: "#00cec9", tile: 0, successes: 0 }
+      ],
+      currentTurn: 0, // 0 for Team 1, 1 for Team 2
+      currentRound: 1,
+      challengeIndex: 0,
+      isRolling: false,
+      awaitingAction: false
+    };
+
+    /* ==========================================================================
+       INITIALIZATION
+       ========================================================================== */
+    function startGame() {
+      const t1 = document.getElementById('team1-input').value.trim() || "Team 1";
+      const t2 = document.getElementById('team2-input').value.trim() || "Team 2";
+
+      gameState.teams[0].name = t1;
+      gameState.teams[1].name = t2;
+
+      document.getElementById('start-screen').classList.remove('active');
+      document.getElementById('game-screen').classList.add('active');
+
+      renderBoard();
+      updateTurnBanner();
+    }
+
+    function renderBoard() {
+      const boardContainer = document.getElementById('board-grid');
+      boardContainer.innerHTML = '';
+
+      boardTiles.forEach((tile) => {
+        const tileDiv = document.createElement('div');
+        tileDiv.className = `tile ${tile.type}`;
+        tileDiv.id = `tile-${tile.id}`;
+
+        tileDiv.innerHTML = `
+          <span class="tile-number">${tile.id}</span>
+          <div class="tile-title">${tile.title}</div>
+          <div class="tile-icon">${tile.icon}</div>
+          <div class="pawns-holder" id="pawns-tile-${tile.id}"></div>
+        `;
+
+        boardContainer.appendChild(tileDiv);
+      });
+
+      updatePawns();
+    }
+
+    function updatePawns() {
+      // Clear previous pawns
+      boardTiles.forEach(tile => {
+        const holder = document.getElementById(`pawns-tile-${tile.id}`);
+        if (holder) holder.innerHTML = '';
+      });
+
+      // Render team pawns
+      gameState.teams.forEach((team, index) => {
+        const holder = document.getElementById(`pawns-tile-${team.tile}`);
+        if (holder) {
+          const pawn = document.createElement('div');
+          pawn.className = `pawn team${index + 1}`;
+          pawn.title = team.name;
+          holder.appendChild(pawn);
+        }
+      });
+    }
+
+    function updateTurnBanner() {
+      const currentTeam = gameState.teams[gameState.currentTurn];
+      const banner = document.getElementById('turn-banner');
+      const dot = document.getElementById('turn-dot');
+      const text = document.getElementById('turn-text');
+
+      banner.style.background = currentTeam.color;
+      banner.style.color = '#fff';
+      dot.style.background = '#fff';
+      text.innerText = `NOW PLAYING: ${currentTeam.name.toUpperCase()}`;
+
+      document.getElementById('game-status-info').innerText = `Round ${gameState.currentRound} / 3`;
+    }
+
+    /* ==========================================================================
+       STRICT ALTERNATING TURN GAME LOOP
+       ========================================================================== */
+    function rollDice() {
+      if (gameState.isRolling || gameState.awaitingAction) return;
+
+      gameState.isRolling = true;
+      document.getElementById('roll-btn').disabled = true;
+      playSound('roll');
+
+      const diceDisplay = document.getElementById('dice-display');
+      diceDisplay.classList.add('rolling');
+
+      let rollsCount = 0;
+      const rollInterval = setInterval(() => {
+        const tempRoll = Math.floor(Math.random() * 6) + 1;
+        diceDisplay.innerText = tempRoll;
+        rollsCount++;
+
+        if (rollsCount > 10) {
+          clearInterval(rollInterval);
+          diceDisplay.classList.remove('rolling');
+          
+          const finalRoll = Math.floor(Math.random() * 6) + 1;
+          diceDisplay.innerText = finalRoll;
+          gameState.isRolling = false;
+
+          moveCurrentTeamPawn(finalRoll);
+        }
+      }, 50);
+    }
+
+    function moveCurrentTeamPawn(steps, isBonusMove = false) {
+      const activeTeam = gameState.teams[gameState.currentTurn];
+      let targetTile = activeTeam.tile + steps;
+
+      if (targetTile >= 24) targetTile = 24; // Finish tile
+
+      // Animate movement step by step
+      let currentStep = activeTeam.tile;
+      const moveInterval = setInterval(() => {
+        if (currentStep < targetTile) {
+          currentStep++;
+          activeTeam.tile = currentStep;
+          playSound('move');
+          updatePawns();
+        } else {
+          clearInterval(moveInterval);
+
+          if (activeTeam.tile === 24) {
+            triggerGameEnd();
+            return;
+          }
+
+          if (!isBonusMove) {
+            triggerTileEvent(activeTeam.tile);
+          } else {
+            // End turn after bonus step applied
+            completeTurn();
+          }
+        }
+      }, 300);
+    }
+
+    function triggerTileEvent(tileId) {
+      const tile = boardTiles[tileId];
+      
+      // Highlight tile
+      const tileEl = document.getElementById(`tile-${tileId}`);
+      tileEl.classList.add('highlighted');
+
+      setTimeout(() => {
+        tileEl.classList.remove('highlighted');
+        
+        // Handle shortcuts or specialty non-challenge tiles
+        if (tile.type === 'shortcut') {
+          showNotificationModal("Shortcut Bridge!", "You found a safe bridge! Advance 2 extra spaces forward.", () => {
+            moveCurrentTeamPawn(2, true);
+          });
+        } else if (tile.type === 'oops') {
+          showNotificationModal("Oops! Obstacle!", "Road blockage! Step back 1 space.", () => {
+            applyPenaltySteps(-1);
+          });
+        } else {
+          // Open Challenge / Mystery / Team Mission Modal
+          openChallengeModal();
+        }
+      }, 500);
+    }
+
+    function openChallengeModal() {
+      const modal = document.getElementById('challenge-modal');
+      const titleEl = document.getElementById('modal-tile-title');
+      const bodyEl = document.getElementById('modal-body-content');
+      const footerEl = document.getElementById('modal-footer-controls');
+
+      // Pick next challenge from bank
+      const challenge = challengeBank[gameState.challengeIndex % challengeBank.length];
+      gameState.challengeIndex++;
+
+      titleEl.innerText = challenge.title;
+      bodyEl.innerHTML = `<p>${challenge.prompt}</p>`;
+      footerEl.innerHTML = '';
+
+      if (challenge.isTeacherEvaluated) {
+        // Teacher / Class judgment controls
+        footerEl.innerHTML = `
+          <div class="teacher-controls">
+            <button class="btn-success" onclick="handleChallengeResult(true, 'Teacher approved!')">✅ Mission Completed</button>
+            <button class="btn-fail" onclick="handleChallengeResult(false, 'Try again next time!')">🔄 Try Again</button>
+          </div>
+        `;
+      } else {
+        // Multiple choice / Auto-evaluated
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options-grid';
+
+        challenge.options.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-option';
+          btn.innerText = opt;
+          btn.onclick = () => {
+            const isCorrect = (idx === challenge.correct);
+            handleChallengeResult(isCorrect, challenge.explanation);
+          };
+          optionsDiv.appendChild(btn);
+        });
+
+        bodyEl.appendChild(optionsDiv);
+      }
+
+      modal.classList.add('active');
+    }
+
+    function handleChallengeResult(isSuccess, feedbackText) {
+      document.getElementById('challenge-modal').classList.remove('active');
+      const activeTeam = gameState.teams[gameState.currentTurn];
+
+      if (isSuccess) {
+        playSound('success');
+        activeTeam.successes++;
+        
+        showNotificationModal("GREAT JOB!", `Correct! ${feedbackText || ''}\n\nReward: +1 Extra Bonus Space Forward!`, () => {
+          moveCurrentTeamPawn(1, true);
+        });
+      } else {
+        playSound('fail');
+        showNotificationModal("NOT QUITE!", `${feedbackText || ''}\n\nConsequence: Remain in place or step back 1 space.`, () => {
+          applyPenaltySteps(-1);
+        });
+      }
+    }
+
+    function applyPenaltySteps(steps) {
+      const activeTeam = gameState.teams[gameState.currentTurn];
+      activeTeam.tile = Math.max(0, activeTeam.tile + steps);
+      updatePawns();
+      completeTurn();
+    }
+
+    function showNotificationModal(title, message, callback) {
+      const modal = document.getElementById('challenge-modal');
+      document.getElementById('modal-tile-title').innerText = title;
+      document.getElementById('modal-body-content').innerHTML = `<p style="font-size: 1.2rem; text-align: center;">${message}</p>`;
+      
+      const footer = document.getElementById('modal-footer-controls');
+      footer.innerHTML = `<button class="btn-primary" id="notif-ok-btn">OK</button>`;
+      
+      modal.classList.add('active');
+
+      document.getElementById('notif-ok-btn').onclick = () => {
+        modal.classList.remove('active');
+        if (callback) callback();
+      };
+    }
+
+    /* Strictly alternate turn between Team 1 and Team 2 */
+    function completeTurn() {
+      // Switch team turn strictly (0 -> 1 -> 0 -> 1)
+      gameState.currentTurn = gameState.currentTurn === 0 ? 1 : 0;
+      
+      // Check for round completion (Every 6 challenge attempts)
+      if (gameState.challengeIndex > 0 && gameState.challengeIndex % 6 === 0) {
+        if (gameState.currentRound < 3) {
+          showRoundSummary();
+          return;
+        }
+      }
+
+      updateTurnBanner();
+      document.getElementById('roll-btn').disabled = false;
+    }
+
+    /* ==========================================================================
+       ROUND SUMMARY & WINNER CERTIFICATE
+       ========================================================================== */
+    function showRoundSummary() {
+      const modal = document.getElementById('round-modal');
+      document.getElementById('round-summary-title').innerText = `Round ${gameState.currentRound} Completed!`;
+
+      const tbody = document.getElementById('round-stats-body');
+      tbody.innerHTML = '';
+
+      gameState.teams.forEach(t => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="font-weight: bold; color: ${t.color}">${t.name}</td>
+          <td>Tile ${t.tile}</td>
+          <td>${t.successes} Missions</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      modal.classList.add('active');
+    }
+
+    function closeRoundSummary() {
+      document.getElementById('round-modal').classList.remove('active');
+      gameState.currentRound++;
+      updateTurnBanner();
+      document.getElementById('roll-btn').disabled = false;
+    }
+
+    function triggerGameEnd() {
+      // Determine Winner based on Tile distance & successes
+      let winner = gameState.teams[0];
+      if (gameState.teams[1].tile > gameState.teams[0].tile) {
+        winner = gameState.teams[1];
+      } else if (gameState.teams[1].tile === gameState.teams[0].tile) {
+        if (gameState.teams[1].successes > gameState.teams[0].successes) {
+          winner = gameState.teams[1];
+        }
+      }
+
+      document.getElementById('winner-team-name').innerText = winner.name;
+      document.getElementById('winner-team-name').style.color = winner.color;
+      document.getElementById('cert-date').innerText = new Date().toLocaleDateString();
+
+      playSound('success');
+      document.getElementById('winner-modal').classList.add('active');
+    }
+
+    function resetGame() {
+      gameState.teams.forEach(t => { t.tile = 0; t.successes = 0; });
+      gameState.currentTurn = 0;
+      gameState.currentRound = 1;
+      gameState.challengeIndex = 0;
+      gameState.isRolling = false;
+      gameState.awaitingAction = false;
+
+      document.getElementById('winner-modal').classList.remove('active');
+      document.getElementById('round-modal').classList.remove('active');
+      document.getElementById('challenge-modal').classList.remove('active');
+      
+      document.getElementById('game-screen').classList.remove('active');
+      document.getElementById('start-screen').classList.add('active');
+    }
+  </script>
+</body>
+</html>
